@@ -1,0 +1,70 @@
+reprompt_strategy:
+  task: Analyze failed or ineffective actions from the plant_operator and suggest a modified plan.
+  description: >
+    When the validation agent detects that an action was not successfully executed (e.g., flow obstruction, incorrect valve status, or insufficient pump power), this agent receives the fault context and current system state.
+
+    The goal is to analyze what went wrong, and design a step-by-step correction plan.
+
+    **Plant Function:**
+      - Mixing of three liquids, sequentially transferred from tanks B201, B202, and B203 into tank B204.
+
+      **Plant Structure:**
+      - The system consists of four tanks: **B201, B202, B203, B204**.
+      - There are eight valves controlling liquid movement:
+        - **Filling Valves:** valve_in0, valve_in1, valve_in2
+        - **Pumping Valves:** valve_pump_tank_B201, valve_pump_tank_B202, valve_pump_tank_B203, valve_pump_tank_B204
+        - **Output Valve:** valve_out
+
+      **Plant Behavior:**
+      - Control Sequence:
+        1. Open **valve_in0** to fill **tank B201** to maximum of 0.033m only and only if the level in **tank B202** and **tank B203** both are at their minimum of 0.022m.
+        2. Once **B201** reaches its maximum capacity, close **valve_in0** and open **valve_in1** to fill **tank B202** to maximum of 0.033m.
+        3. Once **B202** reaches its maximum capacity, close **valve_in1** and open **valve_in2** to fill **tank B203** to maximum of 0.033m.
+        4. Once **B203** is full, all three tanks are ready for emptying.
+        5. Open **valve_pump_tank_B204** to fill **B204** and keep it open while emptying **B201, B202, and B203**.
+        6. Open **valve_pump_tank_B201** to transfer liquid from **B201 to B204**.
+        7. Once **B201** reaches min level between 0.021m and 0.22m, close **valve_pump_tank_B201** and open **valve_pump_tank_B202** to empty **B202** into **B204** till **B202** reaches min level between 0.021m and 0.22m.
+        8. Once **B202** reaches min level between 0.021m and 0.22m, close **valve_pump_tank_B202** and open **valve_pump_tank_B203** to empty **B203** into **B204** till **B203** reaches min level between 0.021m and 0.22m.
+        9. Once **B203** reaches min level between 0.021m and 0.22m, all liquids have been mixed in **B204**.
+        10. Open **valve_out** to empty the mixed liquid from **B204** till it reaches a min level between 0.021m and 0.22m.
+
+    **Current State:**
+      - The level of tank B201 is {B201_level}m 
+      - The level of tank B202 is {B202_level}m 
+      - The level of tank B203 is {B203_level}m 
+      - The level of tank B204 is {B204_level}m 
+      - The valve_in0 is {valve_in0} 
+      - The valve_in1 is {valve_in1}
+      - The valve_in2 is {valve_in2}
+      - The valve_pump_tank_B201 is {valve_pump_tank_B201} 
+      - The valve_pump_tank_B202 is {valve_pump_tank_B202} 
+      - The valve_pump_tank_B203 is {valve_pump_tank_B203} 
+      - The valve_pump_tank_B204 is {valve_pump_tank_B204} 
+      - The valve_out is {valve_out}
+      - The pump power is {pump_power} times of max pump power of 750W.
+    
+    **System Specifications:**
+      - Valves B201, B202, B203 and B204 are solenoid valves that is on or off only. 
+      - The pump power can be adjusted between 0 and 1 (0 to 750W).
+      
+    - Validation agent has flagged an issue with the current operation. 
+      - The issue flagged is {issue_flagged}.
+      - Identify the valves/pump power casuing this issue and suggest corrective action.
+      - If more valves are open then required, suggest closing the extra valves and only keeping the required valves open.
+      - Do not change the pump power if not required.
+    **Actuators:**
+    - The agent can manipulate the following actuators:
+      - **Valves:** valve_in0, valve_in1, valve_in2, valve_pump_tank_B201, valve_pump_tank_B202, valve_pump_tank_B203, valve_pump_tank_B204, valve_out
+      - **Pump Power:** Adjust the pump power between 0 and 1 (0 to 750W).
+
+    **What to do:**
+    - Analyze the current state and detected faults and manipulate the acutators to overcome the issues.
+
+    **Output Format:**
+    - List of new valve/pump commands.
+    - Reasoning for each change.
+    - Confirmation that this plan should be retried by the plant operator agent.
+
+  agent: reprompt_agent
+  expected_output: >
+    Suggested corrective actions with detailed reasoning. This should be relayed back to the plant_operator agent to retry the operation effectively.

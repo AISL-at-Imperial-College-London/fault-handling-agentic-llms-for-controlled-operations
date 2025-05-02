@@ -1,0 +1,172 @@
+plant_operation:
+    task: To sequentially fill and empty tanks to mix liquids in tank B204. 
+    description: >
+      The plant is modeled in OpenModelica. The agent is expected to:
+      1. Understand the OpenModelica StateGraph structure and identify the current state.
+      2. Use the `connect(...)` and `TransitionWithSignal` relationships to **trace possible valid transitions** based on the current state.
+      3. Determine which transition is enabled based on logical conditions (`condition = ...`) and tank levels.
+      4. Suggest **only valid and next-sequential actions**, such as opening valves or activating pumps, that reflect physical constraints and model logic.
+      5. Avoid suggesting actions that would violate system logic or jump steps.
+
+      Ensure your reasoning aligns with the StateGraph's path and connections. Always think step-by-step before issuing commands.
+      Below is the current state of the system:
+      **Current State:**
+      - The level of tank B201 is {B201_level}m 
+      - The level of tank B202 is {B202_level}m 
+      - The level of tank B203 is {B203_level}m 
+      - The level of tank B204 is {B204_level}m 
+      - The valve_in0 is {valve_in0} 
+      - The valve_in1 is {valve_in1}
+      - The valve_in2 is {valve_in2}
+      - The valve_pump_tank_B201 is {valve_pump_tank_B201} 
+      - The valve_pump_tank_B202 is {valve_pump_tank_B202} 
+      - The valve_pump_tank_B203 is {valve_pump_tank_B203} 
+      - The valve_pump_tank_B204 is {valve_pump_tank_B204} 
+      - The valve_out is {valve_out}
+      
+      model mixerModule
+        // stategraph
+          inner Modelica.StateGraph.StateGraphRoot stateGraphRoot;
+          Modelica.StateGraph.Step state_filling_tank_B201(nIn = 2, nOut = 1);
+          Modelica.StateGraph.Step state_emptying_tank_B201(nIn = 1, nOut = 1);
+          Modelica.StateGraph.InitialStep state_initialStep(nOut = 1, nIn = 1);
+          Modelica.StateGraph.Transition condition_init_step(enableTimer = true, waitTime = 0);
+          Modelica.StateGraph.TransitionWithSignal condition_is_full_tank_B201(enableTimer = true, waitTime = 0);
+          Modelica.StateGraph.TransitionWithSignal condition_is_empty_tank_B201(enableTimer = true, waitTime = 0);
+          Modelica.StateGraph.Step state_filling_tank_B202(nIn = 1, nOut = 1);
+          Modelica.StateGraph.TransitionWithSignal condition_is_full_tank_B202(enableTimer = true, waitTime = 0);
+          Modelica.StateGraph.Step state_emptying_tank_B202(nIn = 1, nOut = 1);
+          Modelica.StateGraph.TransitionWithSignal condition_is_empty_tank_B202(enableTimer = true, waitTime = 0);
+          Modelica.StateGraph.TransitionWithSignal condition_is_full_tank_B203(enableTimer = true, waitTime = 0);
+          Modelica.StateGraph.Step state_filling_tank_B203(nIn = 1, nOut = 1);
+          Modelica.StateGraph.TransitionWithSignal condition_is_empty_tank_B203(enableTimer = true, waitTime = 0);
+          Modelica.StateGraph.Step state_emptying_tank_B203(nIn = 1, nOut = 1);
+          Modelica.StateGraph.Step state_emptying_tank_B204(nIn = 1, nOut = 1);
+          Modelica.StateGraph.TransitionWithSignal condition_is_empty_tank_B204(enableTimer = true, waitTime = 0);
+          Modelica.Fluid.Pipes.StaticPipe pipe7(redeclare package Medium = Medium, diameter(displayUnit = "mm") = 0.01, length = 1, m_flow_start = 0.0005);
+        // equation
+          force_full_tank_B201_transition = init_state<>0 and init_state<>1 and init_state<>2;
+          force_full_tank_B202_transition = init_state<>0 and init_state<>1 and init_state<>2;
+          force_full_tank_B203_transition = init_state<>0 and init_state<>1 and init_state<>2;
+          condition_is_full_tank_B201.condition = 
+          (tank_B201.level >= tank_B201.height*tankMaxVol) or force_full_tank_B201_transition;
+          condition_is_full_tank_B202.condition = 
+          (tank_B202.level >= tank_B202.height*tankMaxVol) or force_full_tank_B202_transition;
+          condition_is_full_tank_B203.condition = 
+          (tank_B203.level >= tank_B203.height*tankMaxVol) or force_full_tank_B203_transition;
+          condition_is_empty_tank_B201.condition = tank_B201.level <= tank_B201.height*tankMinVol;
+          condition_is_empty_tank_B202.condition = tank_B202.level <= tank_B202.height*tankMinVol;
+          condition_is_empty_tank_B203.condition = tank_B203.level <= tank_B203.height*tankMinVol;
+          condition_is_empty_tank_B204.condition = tank_B204.level <= tank_B204.height*tankMinVol;
+          valve_in0.opening = if state_filling_tank_B201.active and valve_in0_input > 0.5 then 1.0 else var_valve_in0;
+          valve_in1.opening = if state_filling_tank_B202.active and valve_in1_input > 0.5 then 1.0 else var_valve_in1;
+          valve_in2.opening = if state_filling_tank_B203.active and valve_in2_input > 0.5 then 1.0 else var_valve_in2;
+          valve_pump_tank_B201.opening = if state_emptying_tank_B201.active and valve_pump_tank_B201_input > 0.5 then 1.0 else 0.0;
+          valve_pump_tank_B202.opening = if state_emptying_tank_B202.active and valve_pump_tank_B202_input > 0.5 then 1.0 else 0.0;
+          valve_pump_tank_B203.opening = if state_emptying_tank_B203.active and valve_pump_tank_B203_input > 0.5 then 1.0 else 0.0;
+          valve_pump_tank_B204.opening = if state_emptying_tank_B201.active and valve_pump_tank_B204_input > 0.5 then 1.0 elseif state_emptying_tank_B202.active and valve_pump_tank_B204_input > 0.5 then 1.0
+          elseif state_emptying_tank_B203.active and valve_pump_tank_B204_input > 0.5 then 1.0 else 0.0;
+          pump_n_in = if state_emptying_tank_B201.active and valve_pump_tank_B201_input > 0.5 then 750.0*pump_power elseif state_emptying_tank_B202.active and valve_pump_tank_B202_input > 0.5 then 750.0*pump_power
+          elseif state_emptying_tank_B203.active and valve_pump_tank_B203_input > 0.5 then 750.0*pump_power else 0.0;
+          valve_out.opening = if state_emptying_tank_B204.active and valve_out_input > 0.5 then 1.0 else 0.0;
+        // anomalies
+          leaking_valve.opening = if anom_leaking then 0.8 else 0.0;
+          clogging_valve.opening = if anom_clogging then 0.5 else 1.0;
+        // connections
+          connect(tank_B201.ports[1], pipe0.port_a);
+          connect(valve_in0.port_a, port_in0);
+          connect(valve_in0.port_b, tank_B201.topPorts[1]);
+          connect(valve_out.port_b, port_out0);
+          connect(state_initialStep.outPort[1], condition_init_step.inPort);
+          connect(condition_init_step.outPort, state_filling_tank_B201.inPort[1]);
+          connect(state_filling_tank_B201.outPort[1], condition_is_full_tank_B201.inPort);
+          connect(state_emptying_tank_B201.outPort[1], condition_is_empty_tank_B201.inPort);
+          connect(tank_B204.ports[1], valve_out.port_a);
+          connect(pipe0.port_b, valve_pump_tank_B201.port_a);
+          connect(state_emptying_tank_B204.outPort[1], condition_is_empty_tank_B204.inPort);
+          connect(valve_in1.port_a, port_in1);
+          connect(valve_in1.port_b, tank_B202.topPorts[1]);
+          connect(tank_B202.ports[1], pipe2.port_a);
+          connect(pipe2.port_b, valve_pump_tank_B202.port_a);
+          connect(condition_is_full_tank_B201.outPort, state_filling_tank_B202.inPort[1]);
+          connect(state_filling_tank_B202.outPort[1], condition_is_full_tank_B202.inPort);
+          connect(condition_is_empty_tank_B201.outPort, state_emptying_tank_B202.inPort[1]);
+          connect(state_emptying_tank_B202.outPort[1], condition_is_empty_tank_B202.inPort);
+          connect(firstOrder.y, pump_P101.N_in);
+          connect(valve_pump_tank_B201.port_b, tee0.port_1);
+          connect(condition_is_full_tank_B202.outPort, state_filling_tank_B203.inPort[1]);
+          connect(state_filling_tank_B203.outPort[1], condition_is_full_tank_B203.inPort);
+          connect(condition_is_empty_tank_B202.outPort, state_emptying_tank_B203.inPort[1]);
+          connect(state_emptying_tank_B203.outPort[1], condition_is_empty_tank_B203.inPort);
+          connect(condition_is_full_tank_B203.outPort, state_emptying_tank_B201.inPort[1]);
+          connect(condition_is_empty_tank_B203.outPort, state_emptying_tank_B204.inPort[1]);
+          connect(valve_in2.port_a, port_in2);
+          connect(valve_in2.port_b, tank_B203.topPorts[1]);
+          connect(tank_B203.ports[1], pipe4.port_a);
+          connect(pipe4.port_b, valve_pump_tank_B203.port_a);
+          connect(valve_pump_tank_B203.port_b, tee1.port_2);
+          connect(valve_pump_tank_B202.port_b, tee1.port_3);
+          connect(tee1.port_1, tee0.port_2);
+          connect(condition_is_empty_tank_B204.outPort, state_initialStep.inPort[1]);
+          connect(pump_P101.port_b, pipe5.port_a);
+          connect(pipe5.port_b, valve_pump_tank_B204.port_a);
+          connect(valve_pump_tank_B204.port_b, pipe1.port_a);
+          connect(pipe6.port_b, pump_P101.port_a);
+          connect(tank_B201_level.y, level_to_boolean_tank_B201_high.u);
+          connect(tank_B201_level.y, level_to_boolean_tank_B201_medium.u);
+          connect(tank_B201_level.y, level_to_boolean_tank_B201_low.u);
+          connect(level_to_boolean_tank_B201_high.y, sensor_discrete_tank_B201_high.activePort);
+          connect(level_to_boolean_tank_B201_medium.y, sensor_discrete_tank_B201_medium.activePort);
+          connect(level_to_boolean_tank_B201_low.y, sensor_discrete_tank_B201_low.activePort);
+          connect(tank_B202_level.y, level_to_boolean_tank_B202_high.u);
+          connect(tank_B202_level.y, level_to_boolean_tank_B202_medium.u);
+          connect(tank_B202_level.y, level_to_boolean_tank_B202_low.u);
+          connect(level_to_boolean_tank_B202_high.y, sensor_discrete_tank_B202_high.activePort);
+          connect(level_to_boolean_tank_B202_medium.y, sensor_discrete_tank_B202_medium.activePort);
+          connect(level_to_boolean_tank_B202_low.y, sensor_discrete_tank_B202_low.activePort);
+          connect(tank_B203_level.y, level_to_boolean_tank_B203_high.u);
+          connect(tank_B203_level.y, level_to_boolean_tank_B203_medium.u);
+          connect(tank_B203_level.y, level_to_boolean_tank_B203_low.u);
+          connect(level_to_boolean_tank_B203_high.y, sensor_discrete_tank_B203_high.activePort);
+          connect(level_to_boolean_tank_B203_medium.y, sensor_discrete_tank_B203_medium.activePort);
+          connect(level_to_boolean_tank_B203_low.y, sensor_discrete_tank_B203_low.activePort);
+          connect(tank_B204_level.y, level_to_boolean_tank_B204_high.u);
+          connect(tank_B204_level.y, level_to_boolean_tank_B204_medium.u);
+          connect(tank_B204_level.y, level_to_boolean_tank_B204_low.u);
+          connect(level_to_boolean_tank_B204_high.y, sensor_discrete_tank_B204_high.activePort);
+          connect(level_to_boolean_tank_B204_medium.y, sensor_discrete_tank_B204_medium.activePort);
+          connect(level_to_boolean_tank_B204_low.y, sensor_discrete_tank_B204_low.activePort);
+          connect(pipe1.port_b, sensor_continuous_volumeFlowRate.port_a);
+          connect(sensor_continuous_volumeFlowRate.port_b, tank_B204.topPorts[1]);
+          connect(sensor_continuous_pressure_tank_B201.port, valve_pump_tank_B201.port_a);
+          connect(sensor_continuous_pressure_tank_B202.port, valve_pump_tank_B202.port_a);
+          connect(sensor_continuous_pressure_tank_B203.port, valve_pump_tank_B203.port_a);
+          connect(sensor_continuous_pressure_tank_B204.port, valve_out.port_a);
+          connect(pressure_pump_P101.port, pump_P101.port_b);
+          connect(uniformNoise.y, product1.u2);
+          connect(n_in.y, product1.u1);
+          connect(product1.y, firstOrder.u);
+          connect(clogging_valve.port_b, pipe6.port_a);
+          connect(leaking_valve.port_b, anom_sink.ports[1]);
+          connect(tee0.port_3, pipe7.port_a);
+          connect(pipe7.port_b, clogging_valve.port_a);
+          connect(pipe7.port_b, leaking_valve.port_a);
+        end mixerModule;
+
+      Strictly follow the operational procedure in the mentioned order. Do not skip a step. 
+      If there are no actions required from the agent as the levels have not hit the max or min, do not do anything and return the same state the valves are in. 
+
+      **Expected Action:**
+      - The agent should strictly follow the operational procedure.
+      - The agent should provide a list of operations at the current moment if any changes are required.
+      - The agent should provide a clear reasoning process for each action and thought process.
+
+      **Suggested Action for Agent:**
+      {reprompting_suggestions}
+
+      **Example Action:**
+      - If **B201** is empty, the agent should return: valve_pump_tank_B201 - close.
+
+    agent: plant_operator
+    expected_output: >
+      Valve operation required to successfully fill and empty the liquid, along with a clear reasoning process for each action and thought process.

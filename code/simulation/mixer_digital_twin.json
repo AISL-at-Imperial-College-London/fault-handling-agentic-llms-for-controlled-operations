@@ -1,0 +1,77 @@
+{
+    "ds2": {
+        "ds_name": "ds2",
+        "model": {
+            "modules": {
+                "mixer0": {
+                    "files": "../models/Mixer.mo",
+                    "faults": {
+                        "anom_leaking": false,
+                        "anom_clogging": true,
+                        "anom_valve_in0": false,
+                        "anom_valve_in1": false,
+                        "anom_valve_in2": false,
+                        "anom_valve_out0": false,
+                        "anom_pump90": false,
+                        "anom_pump70": false
+                    },
+                    "init_states": {
+                        "B201_level": 0.022,
+                        "B202_level": 0.022,
+                        "B203_level": 0.022,
+                        "B204_level": 0.022,
+                        "valve_in0_input": 1.0,
+                        "valve_in1_input": 0.0,
+                        "valve_in2_input": 0.0,
+                        "valve_out_input": 0.0,
+                        "valve_pump_tank_B201_input": 0.0,
+                        "valve_pump_tank_B202_input": 0.0,
+                        "valve_pump_tank_B203_input": 0.0,
+                        "valve_pump_tank_B204_input": 0.0,
+                        "init_state": 0,
+                        "pump_power": 0.0
+                    }
+                },
+                "source0": {
+                    "files": "../models/Source.mo",
+                    "faults": {}
+                },
+                "source1": {
+                    "files": "../models/Source.mo",
+                    "faults": {}
+                },
+                "source2": {
+                    "files": "../models/Source.mo",
+                    "faults": {}
+                },
+                "sink0": {
+                    "files": "../models/Sink.mo",
+                    "faults": {}
+                }
+            },
+            "edges": {
+                "0": [
+                    "source0.port_out0",
+                    "mixer0.port_in0"
+                ],
+                "1": [
+                    "source1.port_out0",
+                    "mixer0.port_in1"
+                ],
+                "2": [
+                    "source2.port_out0",
+                    "mixer0.port_in2"
+                ],
+                "3": [
+                    "mixer0.port_out0",
+                    "sink0.port_in0"
+                ]
+            }
+        },
+        "sim_setup": {
+            "startTime": 0,
+            "stopTime": 10,
+            "numberOfIntervals": 10
+        }
+    }
+}

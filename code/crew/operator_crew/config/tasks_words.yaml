@@ -1,0 +1,58 @@
+plant_operation:
+    task: To determine if the plant is operating within safe limits. 
+    description: >
+      task: To sequentially fill and empty tanks to mix liquids in tank B204.
+    description: >
+      The objective is to properly control the flow of liquids from tanks B201, B202, and B203 into B204 by operating the respective valves in a sequential manner.
+      The agent should provide a list of actions that should be carried out at the present moment. 
+
+      **System Overview:**
+      - The system consists of four tanks: **B201, B202, B203, B204**.
+      - There are eight valves controlling liquid movement:
+        - **Filling Valves:** valve_in0, valve_in1, valve_in2
+        - **Pumping Valves:** valve_pump_tank_B201, valve_pump_tank_B202, valve_pump_tank_B203, valve_pump_tank_B204
+        - **Output Valve:** valve_out
+
+      **Operational Procedure:**
+      1. Open **valve_in0** to fill **tank B201** to maximum of 0.033m only and only if the level in **tank B202** and **tank B203** both are at their minimum of 0.022m.
+      2. Once **B201** reaches its maximum capacity, close **valve_in0** and open **valve_in1** to fill **tank B202** to maximum of 0.033m.
+      3. Once **B202** reaches its maximum capacity, close **valve_in1** and open **valve_in2** to fill **tank B203** to maximum of 0.033m.
+      4. Once **B203** is full, all three tanks are ready for emptying.
+      5. Open **valve_pump_tank_B204** to fill **B204** and keep it open while emptying **B201, B202, and B203**.
+      6. Open **valve_pump_tank_B201** to transfer liquid from **B201 to B204**.
+      7. Once **B201** reaches min level between 0.021m and 0.22m, close **valve_pump_tank_B201** and open **valve_pump_tank_B202** to empty **B202** into **B204** till **B202** reaches min level between 0.021m and 0.22m.
+      8. Once **B202** reaches min level between 0.021m and 0.22m, close **valve_pump_tank_B202** and open **valve_pump_tank_B203** to empty **B203** into **B204** till **B203** reaches min level between 0.021m and 0.22m.
+      9. Once **B203** reaches min level between 0.021m and 0.22m, all liquids have been mixed in **B204**.
+      10. Open **valve_out** to empty the mixed liquid from **B204** till it reaches a min level between 0.021m and 0.22m.
+
+      **Current State:**
+      - The level of tank B201 is {B201_level}m 
+      - The level of tank B202 is {B202_level}m 
+      - The level of tank B203 is {B203_level}m 
+      - The level of tank B204 is {B204_level}m 
+      - The valve_in0 is {valve_in0} 
+      - The valve_in1 is {valve_in1}
+      - The valve_in2 is {valve_in2}
+      - The valve_pump_tank_B201 is {valve_pump_tank_B201} 
+      - The valve_pump_tank_B202 is {valve_pump_tank_B202} 
+      - The valve_pump_tank_B203 is {valve_pump_tank_B203} 
+      - The valve_pump_tank_B204 is {valve_pump_tank_B204} 
+      - The valve_out is {valve_out}
+
+      Strictly follow the operational procedure in the mentioned order. Do not skip a step. 
+      If there are no actions required from the agent as the levels have not hit the max or min, do not do anything and return the same state the valves are in. 
+
+      **Expected Action:**
+      - The agent should strictly follow the operational procedure.
+      - The agent should provide a list of operations at the current moment if any changes are required.
+      - The agent should provide a clear reasoning process for each action and thought process.
+
+      **Suggested Action for Agent:**
+      {reprompting_suggestions}
+
+      **Example Action:**
+      - If **B201** is empty, the agent should return: `valve_pump_tank_B201 - close`.
+
+    agent: plant_operator
+    expected_output: >
+      Valve operation required to successfully fill and empty the liquid, along with a clear reasoning process for each action and thought process.
