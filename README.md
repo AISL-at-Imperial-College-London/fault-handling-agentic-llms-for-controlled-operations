@@ -163,14 +163,17 @@ We evaluate LLM performance across the three representation formats.
 ## Citation & Contact 📬
 
 For academic use, please cite:
-
-```
-@article{gill2025llm,
-  title={Leveraging LLM Agents and Digital Twins for Fault Handling in Process Plants},
+```bibtex
+@INPROCEEDINGS{11205597,
   author={Gill, Milapji Singh and Vyas, Javal and Markaj, Artan and Gehlhoff, Felix and Mercangöz, Mehmet},
-  journal={arXiv preprint arXiv:},
-  year={2025}
-}
+  booktitle={2025 IEEE 30th International Conference on Emerging Technologies and Factory Automation (ETFA)}, 
+  title={Leveraging LLM Agents and Digital Twins for Fault Handling in Process Plants}, 
+  year={2025},
+  volume={},
+  number={},
+  pages={1-8},
+  keywords={Knowledge engineering;Systematics;Large language models;Knowledge based systems;Process control;Digital twins;Manufacturing automation;LLM Agents;Process Plants;Autonomy;Digital Twins;Artificial Intelligence;Fault Handling},
+  doi={10.1109/ETFA65518.2025.11205597}} 
 ```
 
 **Contact:**  
